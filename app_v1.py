@@ -31,6 +31,7 @@ import pandas as pd
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 def get_table_data(pd,cursor,query) :
     #Now need to get users information from database
     cursor.execute(query)
@@ -527,21 +528,21 @@ with tab3:
         ylist,key='X')
     y=int(Y)
     s=state
-    brand=Data_Aggregated_User_mtd[Data_Aggregated_User_mtd['Year']==y] 
-    brand=Data_Aggregated_User_mtd.loc[(Data_Aggregated_User_mtd['Year'] == y) & (Data_Aggregated_User_mtd['State'] ==s)]
-    myb= brand['Brand_Name'].unique()
+    brand=aud_local[aud_local['Year']==y] 
+    brand=aud_local.loc[(aud_local['Year'] == y) & (aud_local['State'] ==s)]
+    myb= brand['Brand_type'].unique()
     x = sorted(myb).copy()
-    b=brand.groupby('Brand_Name').sum()
+    b=brand.groupby('Brand_type').sum()
     b['brand']=x
-    br=b['Registered_Users_Count'].sum()
+    br=b['Brand_count'].sum()
     labels = b['brand']
-    values = b['Registered_Users_Count'] # customdata=labels,
+    values = b['Brand_count'] # customdata=labels,
     fig3 = go.Figure(data=[go.Pie(labels=labels, values=values, hole=.4,textinfo='label+percent',texttemplate='%{label}<br>%{percent:1%f}',insidetextorientation='horizontal',textfont=dict(color='#000000'),marker_colors=px.colors.qualitative.Prism)])
   
     colT1,colT2 = st.columns([7,3])
     with colT1:
-        st.write("#### ",state.upper()+' IN '+Y)
-        st.plotly_chart(fig3, use_container_width=True)        
+        st.write("#### ",state.upper()+' IN '+str(Y))
+        st.plotly_chart(fig3, use_container_width=True)
     with colT2:
         st.info(
         """
@@ -560,89 +561,91 @@ with tab3:
         """
         )
 
-    b = b.sort_values(by=['Registered_Users_Count'])
-    fig4= px.bar(b, x='brand', y='Registered_Users_Count',color="Registered_Users_Count",
+    b = b.sort_values(by=['Brand_count'])
+    fig4= px.bar(b, x='brand', y='Brand_count',color="Brand_count",
                 title='In '+state+'in '+str(y),
                 color_continuous_scale="oranges",)
     with st.expander("See Bar graph for the same data"):
         st.plotly_chart(fig4,use_container_width=True) 
-# # ===================================================U OVERALL ANALYSIS ====================================================
+# ===================================================U OVERALL ANALYSIS ====================================================
 
-#     with tab4:
-#         years=Data_Aggregated_User_Summary_mtd.groupby('Year')
-#         years_List=Data_Aggregated_User_Summary_mtd['Year'].unique()
-#         years_Table=years.sum()
-#         del years_Table['Quarter']
-#         years_Table['year']=years_List
-#         total_trans=years_Table['Registered_Users'].sum() # this data is used in sidebar    
-#         fig1 = px.pie(years_Table, values='Registered_Users', names='year',color_discrete_sequence=px.colors.sequential.RdBu, title='TOTAL REGISTERED USERS (2018 TO 2022)')
-#         col1, col2= st.columns([0.7,0.3])
-#         with col1:
-#             # st.write('### :green[Drastical Increase in Transactions :rocket:]')
-#             labels = ["US", "China", "European Union", "Russian Federation", "Brazil", "India",
-#                 "Rest of World"]
+    with tab4:
+        mud_local=mud.copy()
+        years=mud_local.groupby('Year')
+        years_List=mud_local['Year'].unique()
+        years_Table=years.sum()
+        del years_Table['Quarter']
+        years_Table['Year']=years_List
+        total_trans=years_Table['Registered_users'].sum() # this data is used in sidebar    
+        fig1 = px.pie(years_Table, values='Registered_users', names='Year',color_discrete_sequence=px.colors.sequential.RdBu, title='TOTAL REGISTERED USERS (2018 TO 2022)')
+        col1, col2= st.columns([0.7,0.3])
+        with col1:
+            # st.write('### :green[Drastical Increase in Transactions :rocket:]')
+            labels = ["US", "China", "European Union", "Russian Federation", "Brazil", "India",
+                "Rest of World"]
 
-#             # Create subplots: use 'domain' type for Pie subplot
-#             fig = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
-#             fig.add_trace(go.Pie(labels=years_Table['year'], values=years_Table['Registered_Users'], name="REGISTERED USERS"),
-#                         1, 1)
-#             fig.add_trace(go.Pie(labels=years_Table['year'], values=years_Table['AppOpenings'], name="APP OPENINGS"),
-#                         1, 2)
+            # Create subplots: use 'domain' type for Pie subplot
+            fig = make_subplots(rows=1, cols=2, specs=[[{'type':'domain'}, {'type':'domain'}]])
+            fig.add_trace(go.Pie(labels=years_Table['Year'], values=years_Table['Registered_users'], name="REGISTERED USERS"),
+                        1, 1)
+            fig.add_trace(go.Pie(labels=years_Table['Year'], values=years_Table['Appopens'], name="APP OPENINGS"),
+                        1, 2)
 
-#             # Use `hole` to create a donut-like pie chart
-#             fig.update_traces(hole=.6, hoverinfo="label+percent+name")
+            # Use `hole` to create a donut-like pie chart
+            fig.update_traces(hole=.6, hoverinfo="label+percent+name")
 
-#             fig.update_layout(
-#                 title_text="USERS DATA (2018 TO 2022)",
-#                 # Add annotations in the center of the donut pies.
-#                 annotations=[dict(text='USERS', x=0.18, y=0.5, font_size=20, showarrow=False),
-#                             dict(text='APP', x=0.82, y=0.5, font_size=20, showarrow=False)])
-#             # st.plotly_chart(fig1)
-#             st.plotly_chart(fig)
-#         with col2:  
-#             # st.write('#### :green[Year Wise Transaction Analysis in INDIA]')      
-#             st.markdown(years_Table.style.hide(axis="index").to_html(), unsafe_allow_html=True)
-#             st.info(
-#             """
-#             Important Observation:
-#             -  We can see that the Registered Users and App openings are increasing year by year
-            
-#             """
-#             )
+            fig.update_layout(
+                title_text="USERS DATA (2018 TO 2022)",
+                # Add annotations in the center of the donut pies.
+                annotations=[dict(text='USERS', x=0.18, y=0.5, font_size=20, showarrow=False),
+                            dict(text='APP', x=0.82, y=0.5, font_size=20, showarrow=False)])
+            # st.plotly_chart(fig1)
+            st.plotly_chart(fig)
+        with col2:  
+            # st.write('#### :green[Year Wise Transaction Analysis in INDIA]')      
+            st.markdown(years_Table.style.hide(axis="index").to_html(), unsafe_allow_html=True)
+            st.info(
+            """
+            Important Observation:
+            -  We can see that the Registered Users and App openings are increasing year by year
+          
+            """
+            )
 
-# st.write('# :red[TOP 3 STATES DATA]')
-# c1,c2=st.columns(2)
-# with c1:
-#     Year = st.selectbox(
-#             'Please select the Year',
-#             ('2022', '2021','2020','2019','2018'),key='y1h2k')
-# with c2:
-#     Quarter = st.selectbox(
-#             'Please select the Quarter',
-#             ('1', '2', '3','4'),key='qgwe2')
-# Data_Map_User_mtd=Data_Aggregated_User_Summary_mtd.copy() 
-# top_states=Data_Map_User_mtd.loc[(Data_Map_User_mtd['Year'] == int(Year)) & (Data_Map_User_mtd['Quarter'] ==int(Quarter))]
-# top_states_r = top_states.sort_values(by=['Registered_Users'], ascending=False)
-# top_states_a = top_states.sort_values(by=['AppOpenings'], ascending=False) 
+st.write('# :red[TOP 3 STATES DATA]')
+c1,c2=st.columns(2)
+with c1:
+    Year = st.selectbox(
+            'Please select the Year',
+            ('2022', '2021','2020','2019','2018'),key='y1h2k')
+with c2:
+    Quarter = st.selectbox(
+            'Please select the Quarter',
+            ('1', '2', '3','4'),key='qgwe2')
+mud_local=mud.copy() 
+mtd_local=mtd.copy() 
+top_states=mud_local.loc[(mud_local['Year'] == int(Year)) & (mud_local['Quarter'] ==int(Quarter))]
+top_states_r = top_states.sort_values(by=['Registered_users'], ascending=False)
+top_states_a = top_states.sort_values(by=['Appopens'], ascending=False) 
 
-# top_states_T=Data_Aggregated_Transaction_mtd.loc[(Data_Aggregated_Transaction_mtd['Year'] == int(Year)) & (Data_Aggregated_Transaction_mtd['Quarter'] ==int(Quarter))]
-# topst=top_states_T.groupby('State')
-# x=topst.sum().sort_values(by=['Total_Transactions_count'], ascending=False)
-# y=topst.sum().sort_values(by=['Total_Amount'], ascending=False)
-# col1, col2, col3, col4= st.columns([2.5,2.5,2.5,2.5])
-# with col1:
-#     rt=top_states_r[1:4]
-#     st.markdown("#### :orange[Registered Users :bust_in_silhouette:]")
-#     st.markdown(rt[[ 'State','Registered_Users']].style.hide(axis="index").to_html(), unsafe_allow_html=True)
-# with col2:
-#     at=top_states_a[1:4]
-#     st.markdown("#### :orange[PhonePeApp Openings:iphone:]")
-#     st.markdown(at[['State','AppOpenings']].style.hide(axis="index").to_html(), unsafe_allow_html=True)
-# with col3:
-#     st.markdown("#### :orange[Total Transactions:currency_exchange:]")
-#     st.write(x[['Total_Transactions_count']][1:4])
-# with col4:
-#     st.markdown("#### :orange[Total Amount :dollar:]")
-#     st.write(y['Total_Amount'][1:4])      
-        
+top_states_T=mtd_local.loc[(mtd_local['Year'] == int(Year)) & (mtd_local['Quarter'] ==int(Quarter))]
+topst=top_states_T.groupby('district_name')
+x=topst.sum().sort_values(by=['HoverDataMetric_count'], ascending=False)
+y=topst.sum().sort_values(by=['HoverDataMetric_amount'], ascending=False)
+col1, col2, col3, col4= st.columns([2.5,2.5,2.5,2.5])
+with col1:
+    rt=top_states_r[1:4]
+    st.markdown("#### :orange[Registered Users :bust_in_silhouette:]")
+    st.markdown(rt[[ 'district_name','Registered_users']].style.hide(axis="index").to_html(), unsafe_allow_html=True)
+with col2:
+    at=top_states_a[1:4]
+    st.markdown("#### :orange[PhonePeApp Openings:iphone:]")
+    st.markdown(at[['district_name','Appopens']].style.hide(axis="index").to_html(), unsafe_allow_html=True)
+with col3:
+    st.markdown("#### :orange[Total Transactions:currency_exchange:]")
+    st.write(x[['HoverDataMetric_count']][1:4])
+with col4:
+    st.markdown("#### :orange[Total Amount :dollar:]")
+    st.write(y['HoverDataMetric_amount'][1:4])      
+      
 
